@@ -2,35 +2,31 @@ package controller;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import javax.swing.JFrame;
 import model.model;
-import view.inventario;
 import view.principal;
 import view.inventario;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import javax.swing.JDialog;
 import javax.swing.JTable;
-import javax.swing.ListSelectionModel;
-import javax.swing.table.DefaultTableModel;
-public class controller implements ActionListener
+public class controller extends controller_mouse implements ActionListener, ItemListener
 {   
     JFrame frame;
+    JTable TablaP;
+    static inventario i;
+    model m;
     private ArrayList datos2 = new ArrayList<>();
+    
     public controller()
     {
         
     }
-    public controller(JFrame frame_c)
+    public controller(JFrame frame_c, JTable tabla)
     {
         frame=frame_c;
+        TablaP=tabla;
     }
     public void Principal()
     {
@@ -42,41 +38,51 @@ public class controller implements ActionListener
     }
     public void actionPerformed(ActionEvent e) 
     {
-        model m = new model();
-        inventario i = new inventario(frame, "GESTION DE INVENTARIO",m.select(m.conexion()));
         String evento = e.getActionCommand();
-        datos2 = m.select(m.conexion());
+        
         //VISTAS
         if(evento.equals("GESTION DE INVENTARIO"))
         {   
+            m = new model();
+            i = new inventario(frame, "GESTION DE INVENTARIO",m.select(m.conexion(), null));
             setDatos2(datos2);
             i.setSize(1000, 600);
             i.setBackground(Color.red);
             i.setResizable(false);
             i.setVisible(true);
         }
-        //MODELO
+        
+        if(evento.equals("filtrar"))
+        {
+            m = new model();
+            String [] filters = i.filtros();
+            datos2 = m.select(m.conexion(), filters);
+            i.recargar(datos2);
+            
+        }
         if(evento.equals("refresh"))
         {
-           i.valores_seleccionados(datos2);
+           m = new model();
+           datos2 = m.select(m.conexion(), null);
+           i.recargar(datos2);
         }
         if(evento.equals("ping"))
         {
-            String fila = i.ip;
+            m = new model();
+            String fila = ip2;
             m.ping(fila);
         }
         if(evento.equals("conectar"))
         {
-            String fila = i.ip;
-            String sucursal = i.suc;
-            m.conectar(fila, sucursal);
-            
-            
+            m = new model();
+            String fila = ip2;
+            String sucursal = suc;
+            System.err.println(ip2+suc+"este");
+            m.conectar(fila, sucursal);   
         }
         if(evento.equals("salir"))
         {
-            System.err.println("salir alb");
-            i.dispose();
+           i.cerrar();
         }
     }
 
@@ -86,6 +92,11 @@ public class controller implements ActionListener
 
     public void setDatos2(ArrayList datos2) {
         this.datos2 = datos2;
+    }
+
+    public void itemStateChanged(ItemEvent e) 
+    {
+        i.createcb_features();
     }
     
 }

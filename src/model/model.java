@@ -27,20 +27,31 @@ public class model
         }
         return conn;
     }
-     public ArrayList<equipo> select(Connection conn)
+     public ArrayList<equipo> select(Connection conn, String [] arr)
      {
+        String SELECT = null;
+        if(arr == null )
+        {
+            SELECT = "SELECT * FROM inventario";
+        }
+        else if(arr[1].equals("null") && arr[2].equals("null"))
+        {
+            SELECT = "SELECT * FROM inventario WHERE SUCURSAL LIKE '"+arr[0]+"'";
+        }
+        else
+        {
+            SELECT = "SELECT * FROM inventario WHERE SUCURSAL LIKE '"+arr[0]+"' && ";
+        }
         //Connection conn = conexion();
         ArrayList <equipo> datos = new ArrayList<>();
         Statement stmt = null;
         ResultSet rs = null;
-        
-        String SELECT = "SELECT * FROM inventario";
-        
+
          try 
-         {
-             stmt = conn.createStatement();
-             rs = stmt.executeQuery(SELECT);
-             while(rs.next())
+         {  
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery(SELECT);
+            while(rs.next())
             {
                 String IP = rs.getString(1);
                 String ENCARGADO = rs.getString(2);

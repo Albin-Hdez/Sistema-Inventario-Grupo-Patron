@@ -46,7 +46,7 @@ public class principal extends JFrame
 	Red.add(Gestion_R);
         
         //EVENTOS
-        controller ctrl = new controller(this);
+        controller ctrl = new controller(this,null);
         Gestion.addActionListener(ctrl);
         Gestion_R.addActionListener(ctrl);
     }

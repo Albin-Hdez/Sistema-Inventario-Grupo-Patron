@@ -1,33 +1,32 @@
 package view;
 
 import controller.controller;
-import java.awt.BorderLayout;
+import controller.controller_mouse;
 import java.awt.Color;
 import java.awt.Image;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.*;
 import javax.swing.ImageIcon;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
 import model.equipo;
 public class inventario extends JDialog
 {   
     public static JTable MuestraT;
-    private JScrollPane spane;
-    private DefaultTableModel tmd;
+    public static JScrollPane spane;
+    private static DefaultTableModel tmd;
+    JPanel panel;
     public static String ip;
     public static String suc;
     String [] Bodegas = {"Mercado","Oso", "Yebavito", "Navolato", "Culiacancito", "Espyga", "La Cruz", "Angostura", "El Gato", "Guasave", "Mezquitillo" };
+    String [] Componente = {"Procesador", "RAM", "Disco Duro"};
+    
     private JTextField txt_Buscar;
     JComboBox <Object> cb_bodegas, cb_componente, cb_carac;
     JButton btn_Filtrar, btn_refresh ,btn_ping ,btn_Conectar, btn_Añadir, btn_Editar, btn_Eliminar, btn_Salir;
     JLabel lb_bodega, lb_comp, lb_carac;
-    
     public inventario()
     {
         
@@ -36,6 +35,7 @@ public class inventario extends JDialog
     {   
         super(frame, titulo);
         this.setLayout(null);
+        setVisible(true);
         
         lb_bodega = new JLabel("BODEGA: ");
         lb_bodega.setBounds(20, 20, 70, 20);
@@ -49,7 +49,8 @@ public class inventario extends JDialog
         lb_comp.setBounds(210, 20, 100, 20);
         this.add(lb_comp);
         
-        cb_componente = new JComboBox<>();
+        cb_componente = new JComboBox<>(Componente);
+        cb_componente.setSelectedItem(null);
         cb_componente.setBounds(300, 20, 200, 20);
         this.add(cb_componente);
         
@@ -57,9 +58,7 @@ public class inventario extends JDialog
         lb_carac.setBounds(510, 20, 120, 20);
         this.add(lb_carac);
         
-        cb_carac = new JComboBox<>();
-        cb_carac.setBounds(630, 15, 200, 20);
-        this.add(cb_carac);
+        
         
         Image search = new ImageIcon(getClass().getResource("/img/search.png")).getImage();
         ImageIcon is=new ImageIcon(search.getScaledInstance(20, 20, Image.SCALE_SMOOTH));
@@ -133,51 +132,12 @@ public class inventario extends JDialog
         //btn_Salir.setIcon(iex);
         this.add(btn_Salir);
         
-        MuestraT = new JTable(){public boolean isCellEditable(int rowIndex, int vColIndex){return false;}};
+        cb_carac = new JComboBox<>();
+        cb_carac.setBounds(630, 15, 200, 20);
+        this.add(cb_carac);
+        //valores_seleccionados(select);
+        
         tmd = new DefaultTableModel();
-        tmd =  llenartabla(select);
-        
-        MuestraT.setModel(tmd);
-        MuestraT.setRowSelectionAllowed(true);
-        MuestraT.setCellSelectionEnabled(true);
-        MuestraT.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e)
-            {
-;               if(e.getClickCount() == 1)
-                {
-                    JTable target = (JTable)e.getSource();
-                    int row = target.getSelectedRow();
-                    int col = target.getSelectedColumn();
-                    
-                    String ip2 = (String) target.getValueAt(row, col);
-                    suc = (String) target.getValueAt(row, 2);
-                    
-                    set_Buscar(ip2);
-                }
-            }
-        });
-        spane = new JScrollPane(MuestraT);
-        spane.setVisible(true);
-        spane.setBounds(20,60,810,480);
-        this.add(spane);
-                
-        //Eventos
-        controller ctrl = new controller(frame);
-        btn_refresh.addActionListener(ctrl);
-        btn_refresh.setActionCommand("refresh");
-        btn_ping.addActionListener(ctrl);
-        btn_ping.setActionCommand("ping");
-        btn_Conectar.addActionListener(ctrl);
-        btn_Conectar.setActionCommand("conectar");
-        
-        
-        btn_Salir.addActionListener(ctrl);
-        btn_Salir.setActionCommand("salir");
-        
-       
-    }
-    public DefaultTableModel llenartabla(ArrayList<equipo> select)
-    {   
         tmd.setRowCount(0);
         tmd.addColumn("IP");
         tmd.addColumn("ENCARGADO");
@@ -187,10 +147,27 @@ public class inventario extends JDialog
         tmd.addColumn("DISCO DURO");
         tmd.addColumn("CAPACIDAD");
         tmd.addColumn("STATUS");
+        valores_seleccionados(select);        
+        //Eventos
+        controller ctrl = new controller();
+        btn_Filtrar.addActionListener(ctrl);
+        btn_Filtrar.setActionCommand("filtrar");
+        btn_refresh.addActionListener(ctrl);
+        btn_refresh.setActionCommand("refresh");
+        btn_ping.addActionListener(ctrl);
+        btn_ping.setActionCommand("ping");
+        btn_Conectar.addActionListener(ctrl);
+        btn_Conectar.setActionCommand("conectar");     
+        btn_Salir.addActionListener(ctrl);
+        btn_Salir.setActionCommand("salir");
+        cb_componente.addItemListener(ctrl);
+    }
+    public DefaultTableModel llenartabla(ArrayList<equipo> select)
+    {   
+        
         
         String [] fila = new String[8];
         
-        //System.out.println(select.size());
         for (int i = 0; i < select.size(); i++) 
         {
             
@@ -210,10 +187,21 @@ public class inventario extends JDialog
     }
     public void valores_seleccionados(ArrayList A)
     {   
-        controller c = new controller();
-        System.err.println(A);
+        MuestraT = null;
+        MuestraT = new JTable(){public boolean isCellEditable(int rowIndex, int vColIndex){return false;}};
+              
+        MuestraT.setModel(llenartabla(A));
+        MuestraT.setRowSelectionAllowed(true);
+        MuestraT.setCellSelectionEnabled(true);
+        
+        controller_mouse cm = new controller_mouse();
+        MuestraT.addMouseListener(cm);
+        
+        spane = null;
+        spane = new JScrollPane(MuestraT);
+        spane.setBounds(20,60,810,480);
+        this.add(spane);
     }
-    public JTable tabla(){return this.MuestraT;}
     
     public String get_Buscar(){
         String var = this.txt_Buscar.getText();
@@ -225,5 +213,72 @@ public class inventario extends JDialog
         this.ip = text;
         System.err.println(ip);
         this.txt_Buscar.setText(text);
+    }
+    public void cerrar()
+    {
+        dispose();
+    }
+    public void recargar(ArrayList lista)
+    {
+       tmd.setRowCount(0);
+      
+       MuestraT.setModel(llenartabla(lista));
+    }
+    public void createcb_features()
+    {
+        if(cb_carac != null)
+        {
+            cb_carac.removeAllItems();
+        }
+        
+        String c=cb_componente.getSelectedItem().toString();
+        System.err.println(c);
+        if(c.equals("RAM"))
+        {
+            String [] features = {"2 GB", "4 GB", "6 GB", "8 GB", "16 GB"};
+            for (int i = 0; i < features.length; i++) 
+            {
+                cb_carac.addItem(features[i]);
+            }
+        }
+        if(c.equals("Disco Duro"))
+        {
+            String [] features = {"SSD", "HDD"};
+            for (int i = 0; i < features.length; i++) 
+            {
+                cb_carac.addItem(features[i]);
+            }
+        }
+        if(c.equals("Procesador"))
+        {
+            String [] features = {"Menores a 5 Gen.", "Mayores a 5 Gen."};
+            for (int i = 0; i < features.length; i++) 
+            {
+                cb_carac.addItem(features[i]);
+            }
+        }
+    }
+    public String [] filtros ()
+    {
+        String [] filters = new String[3];
+        
+        filters[0] = cb_bodegas.getSelectedItem().toString();
+        
+        
+        if(cb_componente.getSelectedIndex() == -1)
+        {
+            filters[1] = "null";
+        }else
+        {
+            filters[1] = cb_componente.getSelectedItem().toString();
+        }
+        if(cb_carac.getSelectedIndex() == -1)
+        {
+            filters[2] = "null";
+        }else
+        {
+            filters[2] = cb_carac.getSelectedItem().toString();
+        }
+        return filters;
     }
 }
